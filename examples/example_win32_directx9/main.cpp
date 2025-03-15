@@ -86,6 +86,7 @@ int main(int, char**)
     bool done = false;
     while (!done)
     {
+        Sleep(100);
         // Poll and handle messages (inputs, window resize, etc.)
         // See the WndProc() function below for our to dispatch events to the Win32 backend.
         MSG msg;
@@ -162,6 +163,26 @@ int main(int, char**)
             if (ImGui::Button("Close Me"))
                 show_another_window = false;
             ImGui::End();
+        }
+        {
+            static bool open2 = false;
+            if (ImGui::IsKeyPressed(ImGuiKey_Space)) {
+                ImGui::SetNextWindowCollapsed(false, ImGuiCond_Always);
+            }
+            if (ImGui::Begin("-Test-", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings)) {
+                ImGui::Button("Test\n    Test");
+                ImGui::Checkbox("Open test2", &open2);
+            }
+            ImGui::End();
+
+            if (open2) {
+                ImGui::SetNextWindowCollapsed(false, ImGuiCond_Appearing);
+                if (ImGui::Begin("-Test2-", &open2)) {
+                    ImGui::Button("Test\n    Test");
+                }
+                ImGui::End();
+            }
+ 
         }
 
         // Rendering
