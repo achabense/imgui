@@ -7010,6 +7010,8 @@ static void SetWindowActiveForSkipRefresh(ImGuiWindow* window)
         }
 }
 
+static void SetWindowCollapsedDeferred(ImGuiWindow* window, bool collapsed, ImGuiCond cond);
+
 // Push a new Dear ImGui window to add widgets to.
 // - A default window called "Debug" is automatically stacked at the beginning of every frame so you can use widgets without explicitly calling a Begin/End pair.
 // - Begin/End can be called multiple times during the frame with the same window name to append content.
@@ -7169,7 +7171,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
     else if (first_begin_of_the_frame)
         window->ContentSizeExplicit = ImVec2(0.0f, 0.0f);
     if (g.NextWindowData.HasFlags & ImGuiNextWindowDataFlags_HasCollapsed)
-        SetWindowCollapsed(window, g.NextWindowData.CollapsedVal, g.NextWindowData.CollapsedCond);
+        SetWindowCollapsedDeferred(window, g.NextWindowData.CollapsedVal, g.NextWindowData.CollapsedCond);
     if (g.NextWindowData.HasFlags & ImGuiNextWindowDataFlags_HasFocus)
         FocusWindow(window);
     if (window->Appearing)
@@ -7289,6 +7291,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
             if (g.HoveredWindow == window && g.HoveredId == 0 && g.HoveredIdPreviousFrame == 0 && g.ActiveId == 0 && IsMouseHoveringRect(title_bar_rect.Min, title_bar_rect.Max))
                 if (g.IO.MouseClickedCount[0] == 2 && GetKeyOwner(ImGuiKey_MouseLeft) == ImGuiKeyOwner_NoOwner)
                     window->WantCollapseToggle = true;
+            // (The deferred toggle works here v.)
             if (window->WantCollapseToggle)
             {
                 window->Collapsed = !window->Collapsed;
@@ -7296,6 +7299,8 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
                     use_current_size_for_scrollbar_y = true;
                 MarkIniSettingsDirty(window);
             }
+            // (The fix is just some raw ideas, not dealing with all corner cases!)
+            // (For example, what if there are multiple multi-begin/end (so `first_begin_of_the_frame && !window->SkipRefresh` get skipped)? what if there are interleaving double-click toggling?)
         }
         else
         {
@@ -8228,6 +8233,16 @@ void ImGui::SetWindowCollapsed(ImGuiWindow* window, bool collapsed, ImGuiCond co
 
     // Set
     window->Collapsed = collapsed;
+}
+
+static void SetWindowCollapsedDeferred(ImGuiWindow* window, bool collapsed, ImGuiCond cond) {
+    if (cond && (window->SetWindowCollapsedAllowFlags & cond) == 0)
+        return;
+    window->SetWindowCollapsedAllowFlags &= ~(ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing);
+
+    if (window->Collapsed != collapsed) {
+        window->WantCollapseToggle = true;
+    }
 }
 
 void ImGui::SetWindowHitTestHole(ImGuiWindow* window, const ImVec2& pos, const ImVec2& size)
