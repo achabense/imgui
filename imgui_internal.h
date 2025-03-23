@@ -2521,7 +2521,7 @@ struct IMGUI_API ImGuiWindow
     bool                    WasActive;
     bool                    WriteAccessed;                      // Set to true when any widget access the current window
     bool                    Collapsed;                          // Set when collapsing window to become only title-bar
-    bool                    WantCollapseToggle;
+    ImS8                    CollapsedNext;                      // -1: no update
     bool                    SkipItems;                          // Set when items can safely be all clipped (e.g. window not visible or collapsed)
     bool                    SkipRefresh;                        // [EXPERIMENTAL] Reuse previous frame drawn contents, Begin() returns false.
     bool                    Appearing;                          // Set during the frame where the window is appearing (or re-appearing)
