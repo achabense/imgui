@@ -498,6 +498,10 @@ void ImGui::BulletTextV(const char* fmt, va_list args)
 //   with same ID and different MouseButton (see #8030). You can fix it by:
 //       (1) switching to use a single ButtonBehavior() with multiple _MouseButton flags.
 //    or (2) surrounding those calls with PushItemFlag(ImGuiItemFlags_AllowDuplicateId, true); ... PopItemFlag()
+
+extern bool close_button_no_focus;
+static bool button_behavior_no_focus = false;
+
 bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool* out_held, ImGuiButtonFlags flags)
 {
     ImGuiContext& g = *GImGui;
@@ -541,7 +545,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
             {
                 pressed = true;
                 g.DragDropHoldJustPressedId = id;
-                FocusWindow(window);
+                /*if(!button_behavior_no_focus) */FocusWindow(window);
             }
         }
 
@@ -580,12 +584,13 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
                     g.ActiveIdMouseButton = mouse_button_clicked;
                     if (!(flags & ImGuiButtonFlags_NoNavFocus))
                     {
-                        SetFocusID(id, window);
-                        FocusWindow(window);
+                        // (Code path used by CloseButton)
+                        if (!button_behavior_no_focus) SetFocusID(id, window);
+                        if (!button_behavior_no_focus) FocusWindow(window);
                     }
                     else
                     {
-                        FocusWindow(window, ImGuiFocusRequestFlags_RestoreFocusedChild); // Still need to focus and bring to front, but try to avoid losing NavId when navigating a child
+                        /*if (!button_behavior_no_focus)*/ FocusWindow(window, ImGuiFocusRequestFlags_RestoreFocusedChild); // Still need to focus and bring to front, but try to avoid losing NavId when navigating a child
                     }
                 }
                 if ((flags & ImGuiButtonFlags_PressedOnClick) || ((flags & ImGuiButtonFlags_PressedOnDoubleClick) && g.IO.MouseClickedCount[mouse_button_clicked] == 2))
@@ -598,12 +603,12 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
                     g.ActiveIdMouseButton = mouse_button_clicked;
                     if (!(flags & ImGuiButtonFlags_NoNavFocus))
                     {
-                        SetFocusID(id, window);
-                        FocusWindow(window);
+                        /*if (!button_behavior_no_focus)*/ SetFocusID(id, window);
+                        /*if (!button_behavior_no_focus)*/ FocusWindow(window);
                     }
                     else
                     {
-                        FocusWindow(window, ImGuiFocusRequestFlags_RestoreFocusedChild); // Still need to focus and bring to front, but try to avoid losing NavId when navigating a child
+                        /*if (!button_behavior_no_focus)*/ FocusWindow(window, ImGuiFocusRequestFlags_RestoreFocusedChild); // Still need to focus and bring to front, but try to avoid losing NavId when navigating a child
                     }
                 }
             }
@@ -615,7 +620,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
                     if (!has_repeated_at_least_once)
                         pressed = true;
                     if (!(flags & ImGuiButtonFlags_NoNavFocus))
-                        SetFocusID(id, window); // FIXME: Lack of FocusWindow() call here is inconsistent with other paths. Research why.
+                        /*if (!button_behavior_no_focus)*/ SetFocusID(id, window); // FIXME: Lack of FocusWindow() call here is inconsistent with other paths. Research why.
                     ClearActiveID();
                 }
             }
@@ -858,7 +863,13 @@ bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos)
     bool is_clipped = !ItemAdd(bb_interact, id);
 
     bool hovered, held;
+    if (close_button_no_focus) {
+        button_behavior_no_focus = true;
+    }
     bool pressed = ButtonBehavior(bb_interact, id, &hovered, &held);
+    if (close_button_no_focus) {
+        button_behavior_no_focus = false;
+    }
     if (is_clipped)
         return pressed;
 

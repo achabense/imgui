@@ -25,6 +25,30 @@ void CleanupDeviceD3D();
 void ResetDevice();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+bool close_button_no_focus = false;
+
+static void example() {
+    static bool b = true, c = true;
+    const ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings;
+    if (ImGui::Begin("Window A", 0, flags)) {
+        ImGui::Checkbox("Close button: don't focus window", &close_button_no_focus);
+        ImGui::Checkbox("Window B", &b);
+        ImGui::Checkbox("Window C", &c);
+
+    }
+    ImGui::End();
+    if (b) {
+        ImGui::Begin("Window B", &b, flags);
+        ImGui::Text("--- Window B ---");
+        ImGui::End();
+    }
+    if (c) {
+        ImGui::Begin("Window C", &c, flags);
+        ImGui::Text("--- Window C ---");
+        ImGui::End();
+    }
+}
+
 // Main code
 int main(int, char**)
 {
@@ -153,6 +177,8 @@ int main(int, char**)
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
             ImGui::End();
         }
+
+        example();
 
         // 3. Show another simple window.
         if (show_another_window)
