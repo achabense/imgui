@@ -25,6 +25,34 @@ void CleanupDeviceD3D();
 void ResetDevice();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+// Background: I noticed this when I tried to implement some custom menu behavior using regular windows/popups.
+static void issue() {
+    ImGui::SetNextWindowSize({ 300,200 });
+    if (ImGui::Begin("Issue", 0, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize)) {
+        // If the BeginMenu item is clicked from a regular parent window, the parent window can take the focus and display over the menu.
+        if (ImGui::BeginMenu("Menu 1")) {
+            ImGui::Selectable("A    ");
+            ImGui::Selectable("B    ");
+            ImGui::Selectable("C    ");
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Menu 2")) {
+            ImGui::Selectable("A    ");
+            ImGui::Selectable("B    ");
+            ImGui::Selectable("C    ");
+            // This won't happen if the BeginMenu item is clicked from another menu.
+            if (ImGui::BeginMenu("Menu 3")) {
+                ImGui::Selectable("A    ");
+                ImGui::Selectable("B    ");
+                ImGui::Selectable("C    ");
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenu();
+        }
+    }
+    ImGui::End();
+}
+
 // Main code
 int main(int, char**)
 {
@@ -161,7 +189,7 @@ int main(int, char**)
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
             ImGui::End();
         }
-
+        issue();
         // 3. Show another simple window.
         if (show_another_window)
         {
