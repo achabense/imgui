@@ -9069,6 +9069,7 @@ bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
         PushStyleVarX(ImGuiStyleVar_ItemSpacing, style.ItemSpacing.x * 2.0f);
         float w = label_size.x;
         ImVec2 text_pos(window->DC.CursorPos.x + offsets->OffsetLabel, window->DC.CursorPos.y + window->DC.CurrLineTextBaseOffset);
+        // (Untested.)
         pressed = Selectable("", menu_is_open, selectable_flags, ImVec2(w, label_size.y));
         LogSetNextTextDecoration("[", "]");
         RenderText(text_pos, label);
@@ -9086,7 +9087,16 @@ bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
         float min_w = window->DC.MenuColumns.DeclColumns(icon_w, label_size.x, 0.0f, checkmark_w); // Feedback to next frame
         float extra_w = ImMax(0.0f, GetContentRegionAvail().x - min_w);
         ImVec2 text_pos(window->DC.CursorPos.x + offsets->OffsetLabel, window->DC.CursorPos.y + window->DC.CurrLineTextBaseOffset);
+        // (Note: using the same way (|=, &=~) to set flags as the close button.)
+        // (So like the close button, this will reset ImGuiItemFlags_NoFocus flag even if user set the flag somewhere outside.)
+        // https://github.com/ocornut/imgui/issues/8683#issuecomment-2980998416
+        if (menuset_is_open) {
+            g.CurrentItemFlags |= ImGuiItemFlags_NoFocus;
+        }
         pressed = Selectable("", menu_is_open, selectable_flags | ImGuiSelectableFlags_SpanAvailWidth, ImVec2(min_w, label_size.y));
+        if (menuset_is_open) {
+            g.CurrentItemFlags &= ~ImGuiItemFlags_NoFocus;
+        }
         LogSetNextTextDecoration("", ">");
         RenderText(text_pos, label);
         if (icon_w > 0.0f)
