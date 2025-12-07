@@ -25,12 +25,36 @@ void CleanupDeviceD3D();
 void ResetDevice();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+extern bool button_label_no_clip = false;
+
+static void test() {
+    if (ImGui::Begin("Test")) {
+        char labela[27]{};
+        char labelA[27]{};
+        for (int i = 0; i < 26; ++i) {
+            labela[i] = 'a' + i;
+            labelA[i] = 'A' + i;
+        }
+        ImGui::Text("Old:");
+        ImGui::SmallButton(labela); ImGui::SameLine(); ImGui::SmallButton("qg##test");
+        ImGui::SmallButton(labelA);
+        ImGui::Text("New:");
+        button_label_no_clip = true;
+        ImGui::PushID(1);
+        ImGui::SmallButton(labela); ImGui::SameLine(); ImGui::SmallButton("qg##test");
+        ImGui::SmallButton(labelA);
+        ImGui::PopID();
+        button_label_no_clip = false;
+    }
+    ImGui::End();
+}
+
 // Main code
 int main(int, char**)
 {
     // Make process DPI aware and obtain main monitor scale
     ImGui_ImplWin32_EnableDpiAwareness();
-    float main_scale = ImGui_ImplWin32_GetDpiScaleForMonitor(::MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));
+    float main_scale = 1; // ImGui_ImplWin32_GetDpiScaleForMonitor(::MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));
 
     // Create application window
     WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
@@ -138,6 +162,8 @@ int main(int, char**)
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
+
+        test();
 
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
         {
